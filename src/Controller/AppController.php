@@ -40,29 +40,78 @@ class AppController extends Controller
     public function initialize()
     {
         parent::initialize();
-
         $this->loadComponent('RequestHandler');
-        $this->loadComponent('Flash');
+        $this->loadComponent('Flash');      
         $this->loadComponent('Cookie');
-        $this->loadComponent('Auth', [
-                    'loginRedirect' => [
-                        'controller' => 'Publishs',
-                        'action' => 'add'
-                    ],
-                    'logoutRedirect' => [
-                        'controller' => 'Users',
-                        'action' => 'login'
-                        
-                    ], 'authenticate' => [
-                            'Form' => [
-                                'fields' => ['username' => 'username', 'password' => 'password']
-                            ]
+        if(isset($this->request->prefix) && ($this->request->prefix == 'admin')){
 
-                        ],
-                ]);
-        $this->checkCookie();
+                // if($user == 'admin'){
+            
+                            $this->loadComponent('Auth', [   
+
+                                 'authorize' => 'Controller',  
+
+                                'loginRedirect' => [
+                                'controller' => 'PublishsUpdate',
+                                'action' => 'index',
+                                'prefix' => 'admin',
+                                // 'prefix' => false,
+                                ],
+
+                                'logoutRedirect' => [
+                                'controller' => 'Users',
+                                'action' => 'login',
+                                'prefix' => false,
+                                    
+                                ],
+
+                                'authenticate' => [
+                                    'Form' => [
+                                        'fields' => ['username' => 'username', 'password' => 'password']
+                                    ]
+
+                                ],
+                                
+                            ]);
+                }else{
+                    
+                    $this->loadComponent('Auth', [
+
+                                'loginRedirect' => [
+                                    'controller' => 'Publishs',
+                                    'action' => 'add'
+                                ],
+                                'logoutRedirect' => [
+                                    'controller' => 'Users',
+                                    'action' => 'login'
+                                    
+                                ], 'authenticate' => [
+                                        'Form' => [
+                                            'fields' => ['username' => 'username', 'password' => 'password']
+                                        ]
+
+                                    ],
+                            ]);
+                    $this->checkCookie();
+
+                }
     }
 
+ public function isAuthorized($user = null)
+    {
+      // pr($_SESSION) ;exit;
+        if ($this->request->params['prefix'] === 'admin') 
+        {
+          // echo "test".$user['role'];exit;
+            if($user['role'] != 'admin'){
+              // $this->Flash->error("Unauthorized access");     
+                $this->redirect(['controller' => 'Users','action' => 'login']);
+                return false;
+            }
+               // return true;
+        }  
+         return true;
+    }
     /**
      * Before render callback.
      *
@@ -71,7 +120,21 @@ class AppController extends Controller
      */
     public function beforeFilter(Event $event)
     {
-        $this->Auth->allow(['index', 'view', 'display']);
+           // 
+        if(isset($this->request->prefix) && ($this->request->prefix == 'admin'))
+        {
+            $this->Auth->autoRedirect = false;
+        }else{
+
+                $this->Auth->allow(['index', 'view', 'display']);            
+        }
+
+        // $this->Auth->allow(['index', 'view', 'display']);
+
+        // $this->Auth->allow(['controller'=>'Publishs','action'=>'index']);
+        // $this->Auth->allow(['controller'=>'Publishs','action'=>'view']);
+        // $this->Auth->allow(['controller'=>'Publishs','action'=>'display']);
+     
     }
 
     
@@ -88,7 +151,7 @@ class AppController extends Controller
         $session = $this->request->session()->read("Auth");
         $this->loadModel('Users');
          // pr($session);
-          //      exit();
+         //       exit();
         // echo "abc";
         // exit();
         if(empty($session))

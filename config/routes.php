@@ -74,7 +74,21 @@ Router::scope('/', function (RouteBuilder $routes) {
      */
     $routes->fallbacks(DashedRoute::class);
 });
+Router::prefix('admin', function ($routes) {
+    // Because you are in the admin scope,
+    // you do not need to include the /admin prefix
+    // or the admin route element.
+    $routes->connect('/', ['controller' => 'Users', 'action' => 'login']);
 
+        // $routes->connect('/:controller',['action' => 'home']);
+
+        //$routes->connect('/:controller/:action/*',[], ['routeClass' => 'DashedRoute']);
+
+        $routes->connect('/publishsupdate/:action', ['controller' => 'Publishsupdate']);
+
+        $routes->fallbacks('InflectedRoute');
+
+});
 /**
  * Load all plugin routes.  See the Plugin documentation on
  * how to customize the loading of plugin routes.
